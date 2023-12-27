@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<style type="text/css">
+	input {padding: 2px;margin: 2px;}
+	.flex-row {margin-bottom: 1rem;}
+</style>
+<div>
+  <div class="section fp-section" id="section1">
+    <div class="container">
+      <div class="row">
+      <h2>Register</h2>
+			<form method="POST" class="p-2" style="width:75%">
+				{% csrf_token %}
+					{{ form.as_p }}
+				<p><input type="submit" value="Next"></p>
+				{{ form.errors }}
+			</form>
+    </div>
+  </div>
+</div>
+{% endblock %}
