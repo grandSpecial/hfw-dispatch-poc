@@ -1,0 +1,1 @@
+web: gunicorn dispatch.wsgi --log-file - --timeout 300
