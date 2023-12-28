@@ -1,4 +1,5 @@
 asgiref==3.7.2
+dj-database-url==2.1.0
 Django==5.0
 django-appconf==1.0.6
 django-user-accounts==3.3.2
