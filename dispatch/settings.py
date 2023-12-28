@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = "django-insecure-q^+c-%$9v@ls*xr4=8wez)e9gccpa0cjl%v+)u+d!fydz-bq!o"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -50,6 +50,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 ROOT_URLCONF = "dispatch.urls"
@@ -72,7 +73,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "dispatch.wsgi.application"
 
-# Default configuration for local development
+
+# LOCAL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -84,10 +86,9 @@ DATABASES = {
     }
 }
 
-# Override with Heroku configuration in production
-if os.environ.get('DATABASE_URL'):
+# Heroku 
+if os.getenv("DATABASE_URL"):
     DATABASES['default'] = dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -124,6 +125,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
