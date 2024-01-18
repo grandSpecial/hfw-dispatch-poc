@@ -26,5 +26,6 @@ urlpatterns = [
     path("c/<str:id>", views.case, name='c'),
     path("accounts/",include("django.contrib.auth.urls")),
     path("register/", views.register, name='register'),
+    path("register/<str:mobile_phone>", views.register, name='register'),
     path("log/", views.log, name='log'),
 ]

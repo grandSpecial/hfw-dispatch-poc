@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils import timezone
+from twilio.rest import Client
 import os
 import requests
 import os
@@ -10,6 +11,10 @@ import re
 from app.models import Case, User
 from app.forms import BaseUserCreationForm
 from app.distance import haversine
+
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 
 # HELPER FUNCTION
 def geocode_address(address):
@@ -74,8 +79,21 @@ def report(request, id=None):
 		# TODO
 		# Text the nearby users with a request to pickup
 		# and the URL for the case page 
-		print(nearby_users)
+		client = Client(TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN)
+		# Message to be sent
+		message_body = f"A new {c.animal} case has been reported. Please check the details at <URL_for_case_page>"
 
+		for phone_number in nearby_users:
+			try:
+				message = client.messages.create(
+					to=phone_number,
+					from_=TWILIO_PHONE_NUMBER,
+					body=message_body
+				)
+				print(f"Message sent to {phone_number}: {message.sid}")
+			except Exception as e:
+				print(f"Failed to send message to {phone_number}: {e}")
+		
 		return redirect(case, c.id)
 
 	# if there's an ID in the url then its a relay request 
@@ -133,7 +151,7 @@ def case(request, id):
 	return render(request, 'case.html', 
 				  {"case": case, "tt_key": tt_key, "map_data": map_data})
 
-def register(request):
+def register(request,mobile_phone=None):
 	if request.method == "POST":
 		form = BaseUserCreationForm(request.POST)
 		if form.is_valid():
@@ -148,5 +166,8 @@ def register(request):
 			user.save()  # Now save the user to DB
 			return render(request, 'index.html')
 	else:
-		form = BaseUserCreationForm()
+		if mobile_phone:
+			form = BaseUserCreationForm(initial={'mobile_phone':mobile_phone})
+		else:
+			form = BaseUserCreationForm()
 	return render(request, 'register.html', {'form': form})
