@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4">
+            <h1>Report</h1>
+            <form id="wf-form-report" name="wf-form-report" method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="animal-type" class="form-label">Type of Animal</label>
+                    <input type="text" class="form-control" name="animal-type" id="animal-type" placeholder="Fox">
+                </div>
+                <div class="mb-3">
+                    <label for="reporter-name" class="form-label">Contact Name</label>
+                    <input type="text" class="form-control" name="reporter-name" id="reporter-name" placeholder="What's your name?">
+                </div>
+                <div class="mb-3">
+                    <label for="reporter-phone-number" class="form-label">Contact Number</label>
+                    <input type="text" class="form-control" name="reporter-phone-number" id="reporter-phone-number" placeholder="(555) 555-5555">
+                </div>
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Anything to add?</label>
+                    <textarea class="form-control" id="notes" name="notes" placeholder="Notes"></textarea>
+                </div>
+                <input type="text" name="coordinates" id="coordinates" required="" style="display: none;">
+
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+        <div class="col-md-8">
+            <div id="map" style="width: 100%; height: 100vh;"></div>
+            <style type="text/css">.mapboxgl-marker {width:30px;height:36px}</style>
+        </div>
+    </div>
+</div>
+
+<!-- Phone number Validation -->
+<script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1/bundle/libphonenumber-min.js"></script>
+<script>
+const DEFAULT_COUNTRY = 'CA'
+const formatter = new libphonenumber.AsYouType(DEFAULT_COUNTRY)
+const phoneInput = document.getElementById('reporter-phone-number')
+phoneInput.addEventListener('input', function (event) {
+  formatter.reset()
+  const newValue = formatter.input(phoneInput.value)
+  phoneInput.value = newValue
+  if (!libphonenumber.isValidPhoneNumber(newValue, DEFAULT_COUNTRY)) {
+    phoneInput.setCustomValidity('Invalid phone number')
+  } else {
+    phoneInput.setCustomValidity('')
+  }
+})
+</script>
+
+<!-- Map -->
+<script src="https://api.tomtom.com/maps-sdk-for-web/cdn/5.x/5.64.0/maps/maps-web.min.js"></script>
+<script>
+// Initialize the map with a default location (here I use Amsterdam as an example).
+var map = tt.map({
+    key: '3XAy6LmoYfriuyZF50VPlPAaqo7Pw5oG', // replace with your actual key
+    container: 'map',
+    zoom: 16,
+    center: [-63.2624, 44.6645] // default to Amsterdam
+});
+// Check if geolocation is supported by the browser
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(function(position) {
+    // Get the coordinates
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
+    // Print the coordinates in the console
+    console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+    // Update the map center to the user's location
+    map.setCenter([longitude, latitude]);
+    // set default form value
+    $('#coordinates').val(longitude+","+latitude);
+    // Create a draggable marker at the user's location
+    var userMarker = new tt.Marker({ draggable: true })
+      .setLngLat([longitude, latitude])
+      .addTo(map);
+    // You can add an event listener to handle the drag end event if needed
+    userMarker.on('dragend', function(e) {
+      // extract lng.lat
+      var lnglat = userMarker.getLngLat(); 
+      console.log(lnglat.lng,lnglat.lat);
+      // set value of location input
+      $('#coordinates').val(lnglat.lng+","+lnglat.lat);
+    });
+  }, function(error) {
+    // Handle error
+    console.error('Error obtaining location:', error.message);
+  });
+} else {
+  console.error('Geolocation is not supported by this browser.');
+}
+</script>
+{% endblock %}

@@ -1,21 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
-<style type="text/css">
-	input {padding: 2px;margin: 2px;}
-	.flex-row {margin-bottom: 1rem;}
-</style>
-<div>
-  <div class="section fp-section" id="section1">
+<body>
     <div class="container">
-      <div class="row">
-      <h2>Register</h2>
-			<form method="POST" class="p-2" style="width:75%">
-				{% csrf_token %}
-					{{ form.as_p }}
-				<p><input type="submit" value="Next"></p>
-				{{ form.errors }}
-			</form>
+        <h2>Register</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Register</button>
+        </form>
     </div>
-  </div>
-</div>
+
+	<!-- Phone number format validation -->
+	<script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1/bundle/libphonenumber-min.js"></script>
+	<script>
+	const DEFAULT_COUNTRY = 'CA'
+	const formatter = new libphonenumber.AsYouType(DEFAULT_COUNTRY)
+	const phoneInput = document.getElementById('mobile_phone')
+	phoneInput.addEventListener('input', function (event) {
+	  formatter.reset()
+	  const newValue = formatter.input(phoneInput.value)
+	  phoneInput.value = newValue
+	  if (!libphonenumber.isValidPhoneNumber(newValue, DEFAULT_COUNTRY)) {
+	    phoneInput.setCustomValidity('Invalid phone number')
+	  } else {
+	    phoneInput.setCustomValidity('')
+	  }
+	})
+	</script>
+</body>
 {% endblock %}

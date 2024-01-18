@@ -1,0 +1,16 @@
+{% for case in cases %}
+<b>CASE</b>
+<p>id: {{ case.id }}</p>
+<p>animal: {{ case.animal }}</p>
+<p>created_on: {{ case.created_on }}</p>
+<b>LOGS</b><br>
+	{% for update in case.log %}
+	<b>Update # {{ forloop.counter }}</b>
+	<p>status: {{ update.status }}</p>
+	<p>message: {{ update.message }}</p>
+	<p>updated_on: {{ update.updated_on }}</p>
+	<p>coordinates: {{ update.coordinates }}</p>
+	<p>contact_number: {{ update.contact_number }}</p>
+	{% endfor %}
+<hr>
+{% endfor %}

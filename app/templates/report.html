@@ -37,13 +37,16 @@
           {% csrf_token %}
           <div class="text-block-2">Please drag the map pin to the location of the animal for pick-up then fill out the form below and click submit. A member of the dispatch team will update you as soon as possible. </div>
           <label for="animal-type">Type of Animal</label>
-          <input type="text" class="w-input" maxlength="256" name="animal-type" data-name="animal-type" placeholder="Fox" id="animal-type">
+          <input type="text" class="w-input" maxlength="256" name="animal-type" data-name="animal-type" placeholder="Fox" id="animal-type" value="{{ case.animal }}">
+
           <label for="reporter-name">Contact Name</label>
-          <input type="text" class="w-input" maxlength="256" name="reporter-name" data-name="reporter-name" placeholder="What&#x27;s your name?" id="reporter-name">
+          <input type="text" class="w-input" maxlength="256" name="reporter-name" data-name="reporter-name" placeholder="What&#x27;s your name?" id="reporter-name" value="{{ request.user.first_name }}">
+
           <label for="reporter-phone-number">Contact Number</label>
-          <input type="text" class="w-input" maxlength="256" name="reporter-phone-number" data-name="reporter-phone-number" placeholder="(555) 555-5555" id="reporter-phone-number">
+          <input type="text" class="w-input" maxlength="256" name="reporter-phone-number" data-name="reporter-phone-number" placeholder="(555) 555-5555" id="reporter-phone-number" value="{{ request.user.mobile_phone }}">
+
           <label for="notes">Anything to add?</label>
-          <textarea id="notes" name="notes" maxlength="5000" data-name="notes" placeholder="Notes" class="w-input"></textarea>
+          <textarea id="notes" name="notes" maxlength="5000" data-name="notes" placeholder="Notes" class="w-input">{{ log_type }}</textarea>
 
           <input type="text" class="text-field-3 w-input" maxlength="256" name="coordinates" data-name="coordinates" placeholder="" id="coordinates" required="" style="display: none;">
 

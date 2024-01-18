@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "app",
+    "address",
 ]
 
 MIDDLEWARE = [
@@ -134,3 +135,5 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = 'app.User'
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")

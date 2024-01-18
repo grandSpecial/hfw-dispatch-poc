@@ -67,15 +67,11 @@
       height:100%;
   }
 </style>
-  <script>
-// create an empty array and fill it up with CMS items
-var data = [];
 </script>
 </head>
 <body class="map-container">
   <div class="columns-2 w-row">
     <div class="column-3 w-col w-col-4">
-      <h1>Dispatch Log</h1>
       <div class="div-block-9">
         <div class="w-dyn-list">
           <div role="list" class="w-dyn-items">
@@ -85,19 +81,16 @@ var data = [];
                 <div class="w-row">
                   <div class="w-col w-col-9">
                     <div class="text-item">{{ case.animal }}</div>
-                    <div class="text-item">{{ case.0.updated_on }}</div>
-                    <div class="text-item">{{ case.log.0.message }}</div>
+                    <div class="text-item">{% firstof case.0.updated_on case.created_on %}</div>
+                    <div class="text-item">{{ case.0.log.messages_sent }}</div>
                     <div class="text-item">{{ case.log.0.status }}</div>
 
                   </div>
                   <div class="w-col w-col-3">
                     <a href="{% url 'c' case.id %}" class="button-2-b w-button">Details</a>
                     <div class="html-embed-5 w-embed">
-                      <button class="button-2-b w-button" onclick="goto({{ c.coordinates }});">Focus</button></div>
+                      <button class="button-2-b w-button" onclick="goto([{{ case.log.0.coordinates.0 }},{{ case.log.0.coordinates.1 }}]);">Focus</button></div>
                   </div>
-                </div>
-                <div class="w-embed w-script">
-                  <script>data.push({"coordinates":[],"status":"","Animals":""});</script>
                 </div>
               </div>
             </div>
@@ -116,10 +109,10 @@ var data = [];
   <script src="{% static 'js/webflow.js' %}" type="text/javascript"></script>
   <script>
 var map = tt.map({
-    key: '3XAy6LmoYfriuyZF50VPlPAaqo7Pw5oG', // replace with your actual key
+    key: '3XAy6LmoYfriuyZF50VPlPAaqo7Pw5oG',
     container: 'map',
     zoom: 7,
-    center: [-63.2624, 44.6645] // default to Amsterdam
+    center: [-63.2624, 44.6645]
 });
 function goto(coords) {
     console.log(coords);
@@ -149,7 +142,10 @@ var statusMap = {
     "Dropped-off":"#14A44D"
 }
 // iterate data and call createMarker on its values
+var data = {{ map_data|safe }};
+console.log(data);
 data.forEach(item => {
+    console.log(item.coordintes);
     createMarker(item.coordinates, statusMap[item.status], item.Animals);
 });
 </script>

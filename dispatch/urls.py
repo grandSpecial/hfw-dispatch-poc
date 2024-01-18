@@ -19,10 +19,12 @@ from app import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", views.index, name='inder'),
+    path("", views.index, name='index'),
     path("report/", views.report, name='report'),
-    path("map/", views.map, name='map'),
+    path("report/<str:id>", views.report, name='report'),
+    path("map/", views.map_view, name='map'),
     path("c/<str:id>", views.case, name='c'),
     path("accounts/",include("django.contrib.auth.urls")),
     path("register/", views.register, name='register'),
+    path("log/", views.log, name='log'),
 ]
