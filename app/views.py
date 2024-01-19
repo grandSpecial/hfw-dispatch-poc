@@ -62,10 +62,10 @@ def report(request, id=None):
 				c = Case.objects.get(id=form_id)
 			except Case.DoesNotExist:
 				c = Case(id=Case.short_uuid())
-			status = "relay"
+			status = "Relay"
 		else:
 			c = Case(id=Case.short_uuid())
-			status = "reported"
+			status = "Reported"
 
 		c.animal = request.POST.get("animal-type")
 		
@@ -157,13 +157,15 @@ def case(request, id):
 		user_field = request.POST.get("name-confirm")
 		if user_field == request.user.username:
 			print(request.user)
+			status = request.POST.get("status")
+			print(status)
 			# Add log entry
 			case.add_log_entry(
 				name=request.user.first_name,
 				contact_number=request.user.mobile_phone,  # Assuming contact number is stored in user profile
-				message="Pickup confirmed",
+				message="",
 				coordinates=coordinates,  # Provide the appropriate coordinates here
-				status="waiting",
+				status=status,
 				messages_sent=1 #indicate one text was sent as 1 volunteer has accepted
 			)
 			messages.success(request, "Pickup confirmed.")

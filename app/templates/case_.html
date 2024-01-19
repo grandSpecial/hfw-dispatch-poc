@@ -8,8 +8,10 @@
         <h1 class="mb-0 mr-2">{{ case.animal }}</h1>
         
         <!-- Button -->
-        <button class="btn mr-2 btn-sm btn-success" id="pickUp">Pick-up</button>
-        <a href="{% url 'report' case.id %}" class="btn mr-2 btn-sm btn-warning">Relay</a>
+        <button class="btn mr-2 btn-sm btn-primary" id="pickUp">Pick-up</button>
+        <a href="{% url 'report' case.id %}" class="btn mr-2 btn-sm btn-secondary">Relay</a>
+        <button class="btn mr-2 btn-sm btn-warning" id="inTransit">In transit</button>
+        <button class="btn mr-2 btn-sm btn-success" id="delivered">Delivered</button>
       </div>
     </div>
     <div class="row">
@@ -48,13 +50,13 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="confirmationModalLabel">Confirm Pickup</h5>
+          <h5 class="modal-title" id="statusTitle"></h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-          <p>To confirm pick up, please type your username into the field below.</p>
+          <p id='statusMessage'></p>
           <p><b>{{ user.username }}</b></p>
         </div>
         {% if messages %}
@@ -71,6 +73,7 @@
                 <div class="text-left"> <!-- Added div for left-aligning the button -->
                     <button type="submit" class="btn btn-primary">Confirm</button>
                 </div>
+                <input type="hidden" id="status" name="status" value="">
             </form>
         </div>
       </div>
@@ -219,9 +222,29 @@
 
 <script>
   $(document).ready(function(){
-    $('#pickUp').click(function(){
+    $('#pickUp,#inTransit,#delivered').click(function(){
+      var status = $(this).attr('id'); // Get the id of the clicked element
+      var statusText = "";
+
+      // Determine the text based on the clicked button
+      if (status === 'pickUp') {
+        statusText = "Pick Up";
+      } else if (status === 'inTransit') {
+        statusText = "In Transit";
+      } else if (status === 'delivered') {
+        statusText = "Delivery";
+      }
+
+      $("#status").val(statusText);
+
+      // Set the values for the title and message
+      $('#statusTitle').text(statusText + " Confirmation");
+      $('#statusMessage').text("To confirm " + statusText + ", please type your username into the field below.");
+
+      // Show the modal
       $('#confirmationModal').modal('show');
     });
+
     // render page with modal open after form error
     {% if modal_show %}
       $('#confirmationModal').modal('show');
