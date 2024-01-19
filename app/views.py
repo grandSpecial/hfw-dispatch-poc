@@ -89,7 +89,7 @@ def report(request, id=None):
 		# and the URL for the case page 
 		client = Client(TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN)
 		# Message to be sent
-		url =f"https://hfw.tbat.io/{c.id}"
+		url =f"https://hfw.tbat.io/c/{c.id}"
 		message_body = f"A new {c.animal} case has been reported. Please check the details at {url}"
 
 		for phone_number in nearby_users:
