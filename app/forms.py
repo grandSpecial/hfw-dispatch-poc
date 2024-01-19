@@ -22,7 +22,8 @@ class BaseUserCreationForm(UserCreationForm):
 		required=True)
 
 	mobile_phone = forms.CharField(widget=TextInput(
-		attrs={'placeholder': 'Mobile Phone Number', 'class': 'form-control'}),
+		attrs={'placeholder': 'Mobile Phone Number', 
+		'class': 'form-control', 'id': 'mobile_phone'}),
 		max_length=15, required=True)
 
 	home_address = forms.CharField(widget=TextInput(
