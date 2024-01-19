@@ -53,6 +53,20 @@ def report(request, id=None):
 			c = Case(id=Case.short_uuid())
 		else:
 			c = Case.objects.get(id=id)
+
+		# Retrieve the ID from the form data
+		form_id = request.POST.get('id')
+
+		if form_id:
+			try:
+				c = Case.objects.get(id=form_id)
+			except Case.DoesNotExist:
+				c = Case(id=Case.short_uuid())
+			status = "relay"
+		else:
+			c = Case(id=Case.short_uuid())
+			status = "reported"
+
 		c.animal = request.POST.get("animal-type")
 		
 		# Parse coordinates from the form
@@ -78,7 +92,7 @@ def report(request, id=None):
 			phone_number,
 			request.POST.get("notes"),
 			request.POST.get("coordinates").split(","), # Store list
-			"reported",
+			status,
 			messages_sent,
 		)
 		c.save()
@@ -110,8 +124,7 @@ def report(request, id=None):
 	# get the user information and prepopulate the form
 	if id:
 		c = Case.objects.get(id=id)
-		log_type = "Relay"
-		return render(request, 'report_.html', {'case':c, 'log_type':log_type,
+		return render(request, 'report_.html', {'case':c,
 			"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY, "animal_types":animal_types})
 
 	return render(request, 'report_.html',
