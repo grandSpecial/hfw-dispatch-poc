@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 from twilio.rest import Client
 import os
 import requests
@@ -116,6 +117,7 @@ def report(request, id=None):
 	return render(request, 'report_.html',
 		{"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY,"animal_types":animal_types})
 
+@login_required
 def map_view(request):
 	cases = Case.objects.all().order_by("-created_on")
 	map_data = [
@@ -129,10 +131,12 @@ def map_view(request):
 		{"cases":cases, "map_data":json.dumps(map_data),
 		"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY})
 
+@login_required
 def log(request):
 	cases = Case.objects.all()
 	return render(request, 'log.html', {'cases':cases})
 
+@login_required
 def case(request, id):
 	case = Case.objects.get(pk=id) 
 	coordinates = [float(c) for c in case.log[0]['coordinates']]
