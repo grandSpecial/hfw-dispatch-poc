@@ -1,12 +1,20 @@
 {% extends 'base.html' %}
 {% block content %}
 <body>
-    <div class="container">
+    <div class="container mt-4">
         <h2>Register</h2>
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Register</button>
+            <div class="row" style="height:100%">
+                <div class="col-md-6 col-sm-12">
+                	{% for field in form %}
+                    <div class="form-group">
+                        {{ field }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Register</button>
         </form>
     </div>
 

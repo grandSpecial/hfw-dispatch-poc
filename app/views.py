@@ -16,13 +16,15 @@ TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+
 # HELPER FUNCTION
 def geocode_address(address):
 	# Build the URL
 	base_url = "https://maps.googleapis.com/maps/api/geocode/json"
 	params = {
 		"address": address,
-		"key": os.getenv("GOOGLE_MAPS_API_KEY")
+		"key": GOOGLE_MAPS_API_KEY
 	}
 	response = requests.get(base_url, params=params)
 
@@ -41,6 +43,10 @@ def index(request):
 	return render(request, "index.html")
 
 def report(request, id=None):
+	animal_types = ["Seabird", "Raptor", "Songbird", 
+	"Waterfowl", "Other bird", "Small Rodent", 
+	"Raccoon", "Fox", "Squirrel", "Deer", 
+	"Seal", "Other mammal", "Other"]
 	if request.method == "POST":
 		if not id:
 			c = Case(id=Case.short_uuid())
@@ -50,7 +56,7 @@ def report(request, id=None):
 		
 		# Parse coordinates from the form
 		report_coords = request.POST.get("coordinates").split(",")
-		report_lon, report_lat = map(float, report_coords)
+		report_lat,report_lon = map(float, report_coords)
 
 		# Find users within travel distance
 		nearby_users = []
@@ -59,6 +65,7 @@ def report(request, id=None):
 				user_coords = user.home_coordinates.split(",")
 				user_lat, user_lon = map(float, user_coords)
 				distance = haversine(report_lon, report_lat, user_lon, user_lat)
+				print(distance)
 				if distance <= user.travel_distance:
 					nearby_users.append(user.mobile_phone)
 
@@ -81,9 +88,11 @@ def report(request, id=None):
 		# and the URL for the case page 
 		client = Client(TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN)
 		# Message to be sent
-		message_body = f"A new {c.animal} case has been reported. Please check the details at <URL_for_case_page>"
+		url =f"https://hfw.tbat.io/{c.id}"
+		message_body = f"A new {c.animal} case has been reported. Please check the details at {url}"
 
 		for phone_number in nearby_users:
+			print(phone_number)
 			try:
 				message = client.messages.create(
 					to=phone_number,
@@ -101,9 +110,11 @@ def report(request, id=None):
 	if id:
 		c = Case.objects.get(id=id)
 		log_type = "Relay"
-		return render(request, 'report.html', {'case':c, 'log_type':log_type})
+		return render(request, 'report_.html', {'case':c, 'log_type':log_type,
+			"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY, "animal_types":animal_types})
 
-	return render(request, 'report.html')
+	return render(request, 'report_.html',
+		{"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY,"animal_types":animal_types})
 
 def map_view(request):
 	cases = Case.objects.all().order_by("-created_on")
@@ -114,15 +125,16 @@ def map_view(request):
 		}
 	for case in cases]
 	print(map_data)
-	return render(request, 'map.html', {"cases":cases, "map_data":json.dumps(map_data)})
+	return render(request, 'map_.html', 
+		{"cases":cases, "map_data":json.dumps(map_data),
+		"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY})
 
 def log(request):
 	cases = Case.objects.all()
 	return render(request, 'log.html', {'cases':cases})
 
 def case(request, id):
-	tt_key = os.getenv("TT_KEY")
-	case = Case.objects.get(pk=id)
+	case = Case.objects.get(pk=id) 
 	coordinates = [float(c) for c in case.log[0]['coordinates']]
 	if request.method == "POST":
 		user_field = request.POST.get("name-confirm")
@@ -148,8 +160,9 @@ def case(request, id):
 		 }
 	]
 
-	return render(request, 'case.html', 
-				  {"case": case, "tt_key": tt_key, "map_data": map_data})
+	return render(request, 'case_.html', 
+				  {"case": case, "map_data": map_data,
+				  "GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY})
 
 def register(request,mobile_phone=None):
 	if request.method == "POST":

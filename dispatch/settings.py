@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-q^+c-%$9v@ls*xr4=8wez)e9gccpa0cjl%v+)u+d!fydz-bq!o"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -115,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = 'America/Halifax'
 
 USE_I18N = True
 
@@ -137,3 +137,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = 'app.User'
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+LOGOUT_REDIRECT_URL = '/accounts/login'
+
+LOGIN_REDIRECT_URL = '/'

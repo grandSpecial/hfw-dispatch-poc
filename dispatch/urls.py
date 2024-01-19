@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth.views import LogoutView
 from app import views
 
 urlpatterns = [
@@ -28,4 +29,6 @@ urlpatterns = [
     path("register/", views.register, name='register'),
     path("register/<str:mobile_phone>", views.register, name='register'),
     path("log/", views.log, name='log'),
+    path('logout/', LogoutView.as_view(), {'next_page': '/accounts/login'}, name='logout'),
+
 ]

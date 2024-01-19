@@ -1,72 +1,86 @@
-{% load static %} <!-- Django static files tag -->
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Map Page</title>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-3">
+			{% for case in cases %}
+			<div class="case-block">
+				<div class="case-content">
+					<p>{{ case.animal }}</p>
+					<p>{% firstof case.0.updated_on case.created_on %}</p>
+					<p>{{ case.0.log.messages_sent }}</p>
+					<!-- <p>{{ case.log.0.status }}</p> -->
+				</div>
+				<div class="case-buttons">
+					<a href="{% url 'c' case.id %}" class="btn btn-sm btn-primary mb-2">Details</a>
+					<button class="btn btn-sm btn-secondary" onclick="goto({{ case.log.0.coordinates.0 }},{{ case.log.0.coordinates.1 }});">Focus</button>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+		<div class="col">
+			<div id="map"></div>
+		</div>
+	</div>
+</div>
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="{% static 'leaflet/css/leaflet.css' %}">
-    
-    <style>
-        #map { 
-            height: 400px; /* Adjust the height of the map */
-        }
+<script>
+var map;
 
-        .overflow-scroll {
-            overflow-y: scroll;
-            max-height: 400px; /* Adjust the max height */
-        }
-    </style>
-</head>
-<body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Left Column for Records -->
-            <div class="col-md-4">
-                <h1>Dispatch Log</h1>
-                <div class="overflow-scroll">
-                    {% for case in cases %}
-                    <div>
-                        <!-- Your case details here -->
-                        <p>{{ case.animal }}</p>
-                        <!-- Add other case details -->
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
+function initMap() {
+  	map = new google.maps.Map(document.getElementById('map'), {
+	zoom: 8,
+	center: {lat: 44.6645, lng: -63.2624} // Adjust as needed
+  });
 
-            <!-- Right Column for Map -->
-            <div class="col-md-8">
-                <div id="map"></div>
-            </div>
-        </div>
-    </div>
+  var data = {{ map_data|safe }};
+  data.forEach(item => {
+    var coords = item.coordinates.map(Number); // Convert coordinates to numbers
 
-    <!-- Bootstrap JS, Popper.js, and jQuery -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    // Determine the color based on the status
+    var color = item.status === 'reported' ? '#ff0000' : (item.status === 'waiting' ? '#ffff00' : '#00ff00');
 
-    <!-- Leaflet JS -->
-    <!-- <script src="{% static 'leaflet/js/leaflet.js' %}"></script>? -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    // Create a marker using the createMarker function
+    createMarker({lat: coords[0], lng: coords[1]}, item.Animals, color);
+  });
+}
 
-    <script>
-        // Initialize Leaflet Map
-        var map = L.map('map').setView([51.505, -0.09], 13); // Replace with your default coordinates
+function createMarker(coords, label, color = "#00ff00", isUser = false) {
+  var marker = new google.maps.Marker({
+    position: coords,
+    map: map,
+    title: label,
+    icon: {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: isUser ? 10 : 8,
+      fillColor: color,
+      fillOpacity: 0.8,
+      strokeWeight: 0
+    }
+  });
 
-        // Add an OpenStreetMap tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+  var infowindow = new google.maps.InfoWindow({
+    content: label
+  });
 
-        // Additional JavaScript for map functionality
-        // ...
+  marker.addListener('click', function() {
+    infowindow.open(map, marker);
+  });
+}
 
-    </script>
-</body>
-</html>
+function goto(lat, lng) {
+  var coords = {
+    lat: lat,
+    lng: lng
+  };
+  map.setCenter(coords);
+  map.setZoom(14); // Adjust as needed
+}
+
+// Load the Google Maps API with the callback to initMap
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap"></script>
+
+{% endblock %}
