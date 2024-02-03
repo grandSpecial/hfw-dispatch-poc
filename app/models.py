@@ -9,6 +9,8 @@ class User(AbstractUser):
 	home_address = models.TextField()
 	home_coordinates = models.CharField(max_length=50, blank=True, null=True)
 	travel_distance = models.IntegerField()
+	logged_in = models.BooleanField(default=False)  # New field
+	interests = models.CharField(max_length=255)
 
 def generate_short_uuid():
 	return str(uuid.uuid4())[:5]

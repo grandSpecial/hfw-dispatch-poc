@@ -31,19 +31,39 @@ var map;
 
 function initMap() {
   	map = new google.maps.Map(document.getElementById('map'), {
-	zoom: 8,
-	center: {lat: 44.6645, lng: -63.2624} // Adjust as needed
-  });
+	   zoom: 8,
+	   center: {lat: 44.6645, lng: -63.2624} // Adjust as needed
+    });
 
+  // Add case data
   var data = {{ map_data|safe }};
   data.forEach(item => {
     var coords = item.coordinates.map(Number); // Convert coordinates to numbers
 
     // Determine the color based on the status
-    var color = item.status === 'reported' ? '#ff0000' : (item.status === 'waiting' ? '#ffff00' : '#00ff00');
+    var color = item.status === 'calling' ? '#17a2b8' :
+                (item.status === 'pickUp' ? '#007bff' : 
+                (item.status === 'relay' ? '#6c757d' : 
+                (item.status === 'inTransit' ? '#ffc107' :  
+                (item.status === 'delivered' ? '#28a745' : 
+                (item.status === 'cancel' ? '#dc3545' :  
+                '#000000'))))); 
 
     // Create a marker using the createMarker function
     createMarker({lat: coords[0], lng: coords[1]}, item.Animals, color);
+  });
+
+  // Add user data 
+  var user_data = {{ user_data|safe }};
+  console.log(user_data)
+  user_data.forEach(item => {
+    try {
+      var coords = item.coordinates[0].split(',').map(Number) //split first
+      createMarker({lat: coords[0], lng: coords[1]}, item.name, "#000000")
+      console.log(coords, "good")
+    } catch (exception) {
+      console.error('Error processing user data item:', item, exception);
+    }
   });
 }
 

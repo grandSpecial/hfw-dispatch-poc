@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-  <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
   <div class="container-fluid h-100">
     <div class="row h-100">
       <!-- Form Section -->
       <div class="col-md-4 form-section">
         <h1>Report</h1>
-        <p>Please drag the map pin to the location of the animal for pick-up then fill out the form below and click submit. A member of the dispatch team will update you as soon as possible.</p>
+        <p>Please type the address or drag the map marker to the location of the animal for pick-up then fill out the form below and click submit. A member of the dispatch team will update you as soon as possible.</p>
         <form method="POST" action=".">
           {% csrf_token %}
           <div class="form-group">
@@ -17,6 +17,11 @@
                 <option value="{{ animal_type }}" {% if case.animal == animal_type %}selected{% endif %}>{{ animal_type }}</option>
               {% endfor %}
             </select>
+          </div>
+
+          <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" class="form-control" id="address-input" placeholder="Enter address here">
           </div>
 
           <div class="form-group">
@@ -52,15 +57,24 @@
   <!-- Bootstrap JS -->
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
-  <script>
+ <script>
 function initMap() {
   var map = new google.maps.Map(document.getElementById('map'), {
     zoom: 16,
-    // Default center - this will be updated if geolocation is successful
     center: {lat: 44.6645, lng: -63.2624}
   });
 
-  // Try HTML5 geolocation
+  var geocoder = new google.maps.Geocoder();
+  var autocomplete = new google.maps.places.Autocomplete(document.getElementById('address-input'));
+  autocomplete.bindTo('bounds', map);
+
+  var marker = new google.maps.Marker({
+    map: map,
+    draggable: true,
+    position: map.getCenter() // Initial marker position
+  });
+
+  // Try HTML5 geolocation to set initial marker position
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
       var userLocation = {
@@ -69,23 +83,8 @@ function initMap() {
       };
 
       map.setCenter(userLocation);
-
-      // Place a marker at the user's location
-      var userMarker = new google.maps.Marker({
-        position: userLocation,
-        map: map,
-        draggable: true
-      });
-
-      // Update the coordinates in the form when the marker is dragged
-      google.maps.event.addListener(userMarker, 'dragend', function() {
-        var draggedPosition = userMarker.getPosition();
-        $('#coordinates').val(draggedPosition.lat() + ',' + draggedPosition.lng());
-      });
-
-      // Set the initial coordinates in the form
-      $('#coordinates').val(userLocation.lat + ',' + userLocation.lng);
-
+      marker.setPosition(userLocation);
+      updateCoordinates(userLocation);
     }, function() {
       handleLocationError(true, map.getCenter());
     });
@@ -93,15 +92,64 @@ function initMap() {
     // Browser doesn't support Geolocation
     handleLocationError(false, map.getCenter());
   }
-}
 
-function handleLocationError(browserHasGeolocation, pos) {
-  console.log(browserHasGeolocation ?
+  // Autocomplete listener
+  autocomplete.addListener('place_changed', function() {
+    var place = autocomplete.getPlace();
+    if (!place.geometry) {
+      window.alert("No details available for input: '" + place.name + "'");
+      return;
+    }
+
+    if (place.geometry.viewport) {
+      map.fitBounds(place.geometry.viewport);
+    } else {
+      map.setCenter(place.geometry.location);
+      map.setZoom(17);
+    }
+
+    marker.setPosition(place.geometry.location);
+    updateCoordinates(place.geometry.location);
+  });
+
+  // Marker drag listener
+  google.maps.event.addListener(marker, 'dragend', function() {
+    geocoder.geocode({'location': marker.getPosition()}, function(results, status) {
+      if (status === 'OK') {
+        if (results[0]) {
+          document.getElementById('address-input').value = results[0].formatted_address;
+          updateCoordinates(marker.getPosition());
+        } else {
+          window.alert('No results found');
+        }
+      } else {
+        window.alert('Geocoder failed due to: ' + status);
+      }
+    });
+  });
+
+  function updateCoordinates(location) {
+    // Check if location has lat and lng as functions (LatLng object)
+    if (typeof location.lat === 'function' && typeof location.lng === 'function') {
+      $('#coordinates').val(location.lat() + ',' + location.lng());
+    }
+    // If location is a plain object with lat and lng properties
+    else if ('lat' in location && 'lng' in location) {
+      $('#coordinates').val(location.lat + ',' + location.lng);
+    }
+    else {
+      console.error('Invalid location object passed to updateCoordinates');
+    }
+  }
+
+  function handleLocationError(browserHasGeolocation, pos) {
+    console.log(browserHasGeolocation ?
                 'Error: The Geolocation service failed.' :
                 'Error: Your browser doesn\'t support geolocation.');
-  // Here you can handle the error more gracefully
+    // Here you can handle the error more gracefully
+  }
 }
 
 google.maps.event.addDomListener(window, 'load', initMap);
-  </script>
+</script>
 {% endblock %}

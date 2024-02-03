@@ -39,7 +39,6 @@ def clean_number(phone_string):
 	numbers = re.findall(r'\d+', phone_string)
 	return ''.join(numbers)
 
-# VIEWS
 def index(request):
 	return render(request, "index.html")
 
@@ -75,7 +74,8 @@ def report(request, id=None):
 
 		# Find users within travel distance
 		nearby_users = []
-		for user in User.objects.all():
+		# Get all logged in users and interest == "Dispatch"
+		for user in User.objects.filter(interests="Dispatch").filter(logged_in=True):
 			if user.home_coordinates:
 				user_coords = user.home_coordinates.split(",")
 				user_lat, user_lon = map(float, user_coords)
@@ -137,12 +137,16 @@ def map_view(request):
 		{"coordinates" : case.log[0]['coordinates'], 
 		"status" : case.log[0]['status'], 
 		"Animals" : case.animal,
-		}
-	for case in cases]
-	print(map_data)
+		} for case in cases
+	]
+	logged_in_users = User.objects.filter(logged_in=True)
+	user_data = [{"name":u.username,"coordinates":[u.home_coordinates]} for u in logged_in_users]
+	print("user_data ",user_data)
+	print("map_data ",map_data)
+	
 	return render(request, 'map_.html', 
 		{"cases":cases, "map_data":json.dumps(map_data),
-		"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY})
+		"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY, "user_data": json.dumps(user_data)})
 
 @login_required
 def log(request):
@@ -151,25 +155,26 @@ def log(request):
 
 @login_required
 def case(request, id):
-	case = Case.objects.get(pk=id) 
+	case = Case.objects.get(pk=id)
 	coordinates = [float(c) for c in case.log[0]['coordinates']]
 	if request.method == "POST":
 		user_field = request.POST.get("name-confirm")
 		if user_field == request.user.username:
-			print(request.user)
 			status = request.POST.get("status")
 			print(status)
 			# Add log entry
 			case.add_log_entry(
 				name=request.user.first_name,
 				contact_number=request.user.mobile_phone,  # Assuming contact number is stored in user profile
-				message="",
+				message=request.POST.get("note"),
 				coordinates=coordinates,  # Provide the appropriate coordinates here
 				status=status,
 				messages_sent=1 #indicate one text was sent as 1 volunteer has accepted
 			)
-			messages.success(request, "Pickup confirmed.")
+			messages.success(request, f"{status} confirmed.")
 		else:
+			print(request.user.username)
+			print(user_field)
 			messages.error(request, "Invalid username entered.")
 
 	map_data = [
@@ -202,4 +207,5 @@ def register(request,mobile_phone=None):
 			form = BaseUserCreationForm(initial={'mobile_phone':mobile_phone})
 		else:
 			form = BaseUserCreationForm()
-	return render(request, 'register.html', {'form': form})
+	return render(request, 'register.html', {'form': form,
+		'GOOGLE_MAPS_API_KEY':GOOGLE_MAPS_API_KEY})

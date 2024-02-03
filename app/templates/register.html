@@ -23,23 +23,51 @@
 			<button type="submit" class="btn btn-primary">Register</button>
 		</form>
 	</div>
+	<!-- Include Google Maps Places API -->
+	<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
+	<script>
+		function initAutocomplete() {
+			// Initialize Google Places Autocomplete
+			var autocomplete = new google.maps.places.Autocomplete(
+				document.getElementById('address-input'), {types: ['geocode']}
+			);
 
+			autocomplete.addListener('place_changed', function() {
+				var place = autocomplete.getPlace();
+				if (!place.geometry) {
+					// User entered the name of a Place that was not suggested and
+					// pressed the Enter key, or the Place Details request failed.
+					window.alert("No details available for input: '" + place.name + "'");
+					return;
+				}
+			});
+		}
+
+		google.maps.event.addDomListener(window, 'load', initAutocomplete);
+	</script>
+	
 	<!-- Phone number format validation -->
 	<script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1/bundle/libphonenumber-min.js"></script>
 	<script>
-	const DEFAULT_COUNTRY = 'CA'
-	const formatter = new libphonenumber.AsYouType(DEFAULT_COUNTRY)
-	const phoneInput = document.getElementById('mobile_phone')
+	const DEFAULT_COUNTRY = 'CA';
+	const formatter = new libphonenumber.AsYouType(DEFAULT_COUNTRY);
+	const phoneInput = document.getElementById('mobile_phone');
+
 	phoneInput.addEventListener('input', function (event) {
-	  formatter.reset()
-	  const newValue = formatter.input(phoneInput.value)
-	  phoneInput.value = newValue
+	  formatter.reset();
+	  const newValue = formatter.input(phoneInput.value);
+	  phoneInput.value = newValue;
+	  
+	  // Check if the phone number is valid
 	  if (!libphonenumber.isValidPhoneNumber(newValue, DEFAULT_COUNTRY)) {
-		phoneInput.setCustomValidity('Invalid phone number')
+	    phoneInput.setCustomValidity('Invalid phone number');
+	    phoneInput.classList.add('invalid-input'); // Add class to make the input field red
 	  } else {
-		phoneInput.setCustomValidity('')
+	    phoneInput.setCustomValidity('');
+	    phoneInput.classList.remove('invalid-input'); // Remove class if the phone number becomes valid
 	  }
-	})
+	});
 	</script>
+
 </body>
 {% endblock %}

@@ -1,6 +1,6 @@
 from django import forms  
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.forms.widgets import TextInput, EmailInput, PasswordInput, NumberInput
+from django.forms.widgets import TextInput, EmailInput, PasswordInput, NumberInput, Select
 from address.forms import AddressField
 
 from app.models import User
@@ -8,6 +8,35 @@ from app.models import User
 class BaseUserCreationForm(UserCreationForm):
 	def __init__(self, *args, **kwargs):
 		super(BaseUserCreationForm, self).__init__(*args, **kwargs)
+
+		# Define choices for interests
+		self.fields['interests'] = forms.ChoiceField(
+			choices=[
+				('Dispatch', 'Dispatch (including triage centers)'),
+				('Animal Care', 'Animal Care (on-site only)'),
+				('Education', 'Education'),
+				('Administration', 'Administration'),
+				('Gardening', 'Gardening (on-site only)'),
+			],
+			widget=Select(attrs={'class': 'form-control'}),
+			required=True
+		)
+
+		# Define choices for travel_distance
+		self.fields['travel_distance'] = forms.ChoiceField(
+			choices=[
+				(50, '50KM'),
+				(100, '100KM'),
+				(150, '150KM'),
+				(200, '200KM'),
+				(250, '250KM'),
+				(350, '350KM'),
+				(450, '450KM'),
+				(2000, 'All'),
+			],
+			widget=Select(attrs={'class': 'form-control'}),
+			required=True
+		)
 
 	first_name = forms.CharField(widget=TextInput(
 		attrs={'placeholder': 'First Name', 'class': 'form-control'}),
@@ -27,11 +56,7 @@ class BaseUserCreationForm(UserCreationForm):
 		max_length=15, required=True)
 
 	home_address = forms.CharField(widget=TextInput(
-		attrs={'placeholder': 'Home Address', 'class': 'form-control'}),
-		required=True)
-
-	travel_distance = forms.IntegerField(widget=NumberInput(
-		attrs={'placeholder': 'Maximum travel distance from home', 'class': 'form-control'}),
+		attrs={'placeholder': 'Home Address', 'class': 'form-control', 'id':'address-input'}),
 		required=True)
 
 	password1 = forms.CharField(widget=PasswordInput(
@@ -45,7 +70,7 @@ class BaseUserCreationForm(UserCreationForm):
 	class Meta:
 		model = User
 		fields = ['first_name', 'last_name', 'username',
-				  'mobile_phone', 'home_address', 'travel_distance',
+				  'mobile_phone', 'home_address', 'interests', 'travel_distance',
 				  'password1', 'password2']
 
 class UserLoginForm(AuthenticationForm):
