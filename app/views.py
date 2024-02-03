@@ -134,15 +134,19 @@ def report(request, id=None):
 def map_view(request):
 	cases = Case.objects.all().order_by("-created_on")
 	map_data = [
-		{"coordinates" : case.log[0]['coordinates'], 
+		{"id": case.id,
+		"coordinates" : case.log[0]['coordinates'], 
 		"status" : case.log[0]['status'], 
 		"Animals" : case.animal,
 		} for case in cases
 	]
-	logged_in_users = User.objects.filter(logged_in=True)
-	user_data = [{"name":u.username,"coordinates":[u.home_coordinates]} for u in logged_in_users]
-	print("user_data ",user_data)
-	print("map_data ",map_data)
+	# logged in, dispatch users 
+	logged_in_users = User.objects.filter(interests="Dispatch").filter(logged_in=True)
+	user_data = [
+		{"name":u.username,
+		"coordinates":[u.home_coordinates],
+		"phone":u.mobile_phone,
+		} for u in logged_in_users]
 	
 	return render(request, 'map_.html', 
 		{"cases":cases, "map_data":json.dumps(map_data),

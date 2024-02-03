@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 {% block content %}
   <div class="container my-4">
     <div class="row mb-2" style="height: 100%">
@@ -26,7 +27,7 @@
           {% for c in case.log reversed %}
           <div class="card mb-3">
             <div class="card-header">
-              <strong>Status:</strong> {{ c.status }} | <strong>Date:</strong> {{ c.updated_on }}
+              <strong>Status:</strong> {{ c.status }} | <strong>Date:</strong> {{ c.updated_on|format_iso_datetime }}
             </div>
             <div class="card-body">
               <h5 class="card-title">{{ c.name }}: {{ c.contact_number }}</h5>

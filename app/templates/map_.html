@@ -8,10 +8,10 @@
 			{% for case in cases %}
 			<div class="case-block">
 				<div class="case-content">
-					<p>{{ case.animal }}</p>
+          <span class="small">#{{ case.id }}</span>
+					<p id="case-title">{{ case.animal }}: {{ case.log.0.status }}</p>
 					<p>{% firstof case.0.updated_on case.created_on %}</p>
 					<p>{{ case.0.log.messages_sent }}</p>
-					<!-- <p>{{ case.log.0.status }}</p> -->
 				</div>
 				<div class="case-buttons">
 					<a href="{% url 'c' case.id %}" class="btn btn-sm btn-primary mb-2">Details</a>
@@ -38,6 +38,7 @@ function initMap() {
   // Add case data
   var data = {{ map_data|safe }};
   data.forEach(item => {
+    console.log(item);
     var coords = item.coordinates.map(Number); // Convert coordinates to numbers
 
     // Determine the color based on the status
@@ -47,10 +48,11 @@ function initMap() {
                 (item.status === 'inTransit' ? '#ffc107' :  
                 (item.status === 'delivered' ? '#28a745' : 
                 (item.status === 'cancel' ? '#dc3545' :  
-                '#000000'))))); 
+                (item.status === 'reported' ? '#dc3545' :
+                '#fff')))))); 
 
     // Create a marker using the createMarker function
-    createMarker({lat: coords[0], lng: coords[1]}, item.Animals, color);
+    createMarker({lat: coords[0], lng: coords[1]}, "#"+item.id+"\n"+item.Animals, color);
   });
 
   // Add user data 
@@ -59,8 +61,7 @@ function initMap() {
   user_data.forEach(item => {
     try {
       var coords = item.coordinates[0].split(',').map(Number) //split first
-      createMarker({lat: coords[0], lng: coords[1]}, item.name, "#000000")
-      console.log(coords, "good")
+      createMarker({lat: coords[0], lng: coords[1]}, item.name+"<br>"+item.phone, "#000000")
     } catch (exception) {
       console.error('Error processing user data item:', item, exception);
     }
