@@ -2,26 +2,44 @@
 {% block content %}
 <body>
 	<div class="container mt-4">
-		<h2>Register</h2>
-		<form method="POST">
-			{% csrf_token %}
-			{% if form.errors %}
-				<div class="alert alert-danger">
-					<p>Please correct the following errors:</p>
-					{{ form.errors }}
-				</div>
-			{% endif %}
-			<div class="row" style="height:100%">
-				<div class="col-md-6 col-sm-12">
-					{% for field in form %}
-					<div class="form-group">
-						{{ field }}
-					</div>
-					{% endfor %}
-				</div>
-			</div>
-			<button type="submit" class="btn btn-primary">Register</button>
-		</form>
+	    <h2>Register</h2>
+	    <form method="POST">
+	        {% csrf_token %}
+	        {% if form.errors %}
+	            <div class="alert alert-danger">
+	                <p>Please correct the following errors:</p>
+	                {{ form.errors }}
+	            </div>
+	        {% endif %}
+	        <div class="row" style="height:100%">
+	            <div class="col-md-6 col-sm-12">
+	                {% for field in form %}
+	                    {% if field.name == "travel_distance" %}
+	                        <!-- Custom rendering for travel_distance field -->
+	                        <div class="input-group mb-3">
+	                            <div class="input-group-prepend">
+	                                <span class="input-group-text" id="travel-distance-addon" style="font-size: small;line-height: 0.85;">Willing<br>to travel</span>
+	                            </div>
+	                            {{ field }}
+	                        </div>
+	                    {% elif field.name == "interests" %}
+	                        <div class="input-group mb-3">
+	                            <div class="input-group-prepend">
+	                                <span class="input-group-text" id="travel-distance-addon" style="font-size: small;line-height: 0.85;">Areas<br>or interest</span>
+	                            </div>
+	                            {{ field }}
+	                        </div>
+	                    {% else %}
+	                        <!-- Default rendering for all other fields -->
+	                        <div class="form-group">
+	                            {{ field }}
+	                        </div>
+	                    {% endif %}
+	                {% endfor %}
+	            </div>
+	        </div>
+	        <button type="submit" class="btn btn-primary">Register</button>
+	    </form>
 	</div>
 	<!-- Include Google Maps Places API -->
 	<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
@@ -45,7 +63,7 @@
 
 		google.maps.event.addDomListener(window, 'load', initAutocomplete);
 	</script>
-	
+
 	<!-- Phone number format validation -->
 	<script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1/bundle/libphonenumber-min.js"></script>
 	<script>
