@@ -5,6 +5,7 @@
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-3">
+      <!-- TODO: Use the last update, not the first -->
 			{% for case in cases %}
 			<div class="case-block">
 				<div class="case-content">
@@ -42,13 +43,13 @@ function initMap() {
     var coords = item.coordinates.map(Number); // Convert coordinates to numbers
 
     // Determine the color based on the status
-    var color = item.status === 'calling' ? '#17a2b8' :
-                (item.status === 'pickUp' ? '#007bff' : 
-                (item.status === 'relay' ? '#6c757d' : 
+    var color = item.status === 'Calling' ? '#17a2b8' :
+                (item.status === 'Pick Up' ? '#007bff' : 
+                (item.status === 'Relay' ? '#6c757d' : 
                 (item.status === 'inTransit' ? '#ffc107' :  
-                (item.status === 'delivered' ? '#28a745' : 
-                (item.status === 'cancel' ? '#dc3545' :  
-                (item.status === 'reported' ? '#dc3545' :
+                (item.status === 'Delivery' ? '#28a745' : 
+                (item.status === 'Cancel' ? '#dc3545' :  
+                (item.status === 'Reported' ? '#dc3545' :
                 '#fff')))))); 
 
     // Create a marker using the createMarker function

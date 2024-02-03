@@ -61,10 +61,10 @@ def report(request, id=None):
 				c = Case.objects.get(id=form_id)
 			except Case.DoesNotExist:
 				c = Case(id=Case.short_uuid())
-			status = "Relay"
+			status = "relay"
 		else:
 			c = Case(id=Case.short_uuid())
-			status = "Reported"
+			status = "reported"
 
 		c.animal = request.POST.get("animal-type")
 		
