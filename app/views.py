@@ -61,10 +61,10 @@ def report(request, id=None):
 				c = Case.objects.get(id=form_id)
 			except Case.DoesNotExist:
 				c = Case(id=Case.short_uuid())
-			status = "relay"
+			status = "Relay"
 		else:
 			c = Case(id=Case.short_uuid())
-			status = "reported"
+			status = "Reported"
 
 		c.animal = request.POST.get("animal-type")
 		
@@ -135,8 +135,8 @@ def map_view(request):
 	cases = Case.objects.all().order_by("-created_on")
 	map_data = [
 		{"id": case.id,
-		"coordinates" : case.log[0]['coordinates'], 
-		"status" : case.log[0]['status'], 
+		"coordinates" : case.log[-1]['coordinates'], 
+		"status" : case.log[-1]['status'], 
 		"Animals" : case.animal,
 		} for case in cases
 	]

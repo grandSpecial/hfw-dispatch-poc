@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
+{% load custom_filters %}
 
 <div class="container-fluid">
 	<div class="row">
@@ -8,16 +9,20 @@
       <!-- TODO: Use the last update, not the first -->
 			{% for case in cases %}
 			<div class="case-block">
-				<div class="case-content">
-          <span class="small">#{{ case.id }}</span>
-					<p id="case-title">{{ case.animal }}: {{ case.log.0.status }}</p>
-					<p>{% firstof case.0.updated_on case.created_on %}</p>
-					<p>{{ case.0.log.messages_sent }}</p>
-				</div>
-				<div class="case-buttons">
-					<a href="{% url 'c' case.id %}" class="btn btn-sm btn-primary mb-2">Details</a>
-					<button class="btn btn-sm btn-secondary" onclick="goto({{ case.log.0.coordinates.0 }},{{ case.log.0.coordinates.1 }});">Focus</button>
-				</div>
+        {% for log in case.log %}
+          {% if forloop.last %}
+            <div class="case-content">
+              <span class="small">#{{ case.id }}</span>
+        			<p id="case-title">{{ case.animal }}: {{ log.status }}</p>
+        			<p>{% firstof log.updated_on|format_iso_datetime case.created_on|format_iso_datetime %}</p>
+        			<p>{{ log.messages_sent }}</p>
+        		</div>
+        		<div class="case-buttons">
+        			<a href="{% url 'c' case.id %}" class="btn btn-sm btn-primary mb-2">Details</a>
+        			<button class="btn btn-sm btn-secondary" onclick="goto({{ log.coordinates.0 }},{{ log.coordinates.1 }});">Focus</button>
+        		</div>
+          {% endif %}
+        {% endfor %}
 			</div>
 			{% endfor %}
 		</div>
@@ -46,7 +51,7 @@ function initMap() {
     var color = item.status === 'Calling' ? '#17a2b8' :
                 (item.status === 'Pick Up' ? '#007bff' : 
                 (item.status === 'Relay' ? '#6c757d' : 
-                (item.status === 'inTransit' ? '#ffc107' :  
+                (item.status === 'In Transit' ? '#ffc107' :  
                 (item.status === 'Delivery' ? '#28a745' : 
                 (item.status === 'Cancel' ? '#dc3545' :  
                 (item.status === 'Reported' ? '#dc3545' :
