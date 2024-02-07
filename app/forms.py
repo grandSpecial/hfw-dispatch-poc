@@ -17,6 +17,7 @@ class BaseUserCreationForm(UserCreationForm):
 				('Education', 'Education'),
 				('Administration', 'Administration'),
 				('Gardening', 'Gardening (on-site only)'),
+				('Intern', 'Intern'),
 			],
 			widget=Select(attrs={'class': 'form-control'}),
 			required=True
