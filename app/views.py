@@ -244,8 +244,7 @@ def forgot_password(request):
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
 
         # Generate a link to the password reset page with the token
-        password_reset_link = f'http://hfw.tbat.io/set-password/{uidb64}/{token}'
-        print(f'127.0.0.1:8000/set-password/{uidb64}/{token}')
+        password_reset_link = f'https://hfw.tbat.io/set-password/{uidb64}/{token}'
         
         message_body = f"Please reset the password for user {user.username} by visiting: {password_reset_link}."
         message = client.messages.create(
