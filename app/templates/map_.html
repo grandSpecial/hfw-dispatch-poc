@@ -4,32 +4,35 @@
 {% load custom_filters %}
 
 <div class="container-fluid">
-	<div class="row">
-		<div class="col-3">
-      <!-- TODO: Use the last update, not the first -->
-			{% for case in cases %}
-			<div class="case-block">
-        {% for log in case.log %}
-          {% if forloop.last %}
-            <div class="case-content">
-              <span class="small">#{{ case.id }}</span>
-        			<p id="case-title">{{ case.animal }}: {{ log.status }}</p>
-        			<p>{% firstof log.updated_on|format_iso_datetime case.created_on|format_iso_datetime %}</p>
-        			<p>{{ log.messages_sent }}</p>
-        		</div>
-        		<div class="case-buttons">
-        			<a href="{% url 'c' case.id %}" class="btn btn-sm btn-primary mb-2">Details</a>
-        			<button class="btn btn-sm btn-secondary" onclick="goto({{ log.coordinates.0 }},{{ log.coordinates.1 }});">Focus</button>
-        		</div>
-          {% endif %}
-        {% endfor %}
-			</div>
-			{% endfor %}
-		</div>
-		<div class="col">
-			<div id="map"></div>
-		</div>
-	</div>
+    <div class="row">
+        <!-- Make the map take the full width on small devices and adjust as needed on larger screens -->
+        <div class="col-12 col-md-9 order-md-1">
+            <div id="map" style="height: 50vh; width: 100%;"> <!-- Adjust the height as needed -->
+            </div>
+        </div>
+        <!-- Adjust the column size for mobile to take full width and use col-md-3 for desktop and larger -->
+        <div class="col-12 col-md-3 order-md-2">
+            <!-- Your existing code for case blocks goes here -->
+            {% for case in cases %}
+            <div class="case-block">
+                {% for log in case.log %}
+                {% if forloop.last %}
+                <div class="case-content">
+                    <span class="small">#{{ case.id }}</span>
+                    <p id="case-title">{{ case.animal }}: {{ log.status }}</p>
+                    <p>{% firstof log.updated_on|format_iso_datetime case.created_on|format_iso_datetime %}</p>
+                    <p>{{ log.messages_sent }}</p>
+                </div>
+                <div class="case-buttons">
+                    <a href="{% url 'c' case.id %}" class="btn btn-sm btn-primary mb-2">Details</a>
+                    <button class="btn btn-sm btn-secondary" onclick="goto({{ log.coordinates.0 }},{{ log.coordinates.1 }});">Focus</button>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
 <script>
