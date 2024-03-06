@@ -82,3 +82,17 @@ class UserLoginForm(AuthenticationForm):
 		attrs={'placeholder':'email@domain.com','id':'email', 'class':'w-50'}))
 	password = forms.CharField(widget=PasswordInput(
 		attrs={'placeholder':'password','id':'password', 'class':'w-50'}))
+
+class SetPasswordForm(forms.Form):
+	password1 = forms.CharField(label='New password', widget=forms.PasswordInput)
+	password2 = forms.CharField(label='New password confirmation', widget=forms.PasswordInput)
+
+	def clean(self):
+		cleaned_data = super().clean()
+		password1 = cleaned_data.get("password1")
+		password2 = cleaned_data.get("password2")
+
+		if password1 and password2 and password1 != password2:
+			raise forms.ValidationError("Passwords don't match")
+
+		return cleaned_data

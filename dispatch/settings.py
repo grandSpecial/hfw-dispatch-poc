@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-q^+c-%$9v@ls*xr4=8wez)e9gccpa0cjl%v+)u+d!fydz-bq!o"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -140,4 +142,4 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 LOGOUT_REDIRECT_URL = '/accounts/login'
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/map'

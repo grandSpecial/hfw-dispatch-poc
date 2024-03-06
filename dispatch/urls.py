@@ -27,8 +27,10 @@ urlpatterns = [
     path("c/<str:id>", views.case, name='c'),
     path("accounts/",include("django.contrib.auth.urls")),
     path("register/", views.register, name='register'),
-    path("register/<str:mobile_phone>", views.register, name='register'),
+    path("register/<str:mobile_phone>/", views.register, name='register'),
     path("log/", views.log, name='log'),
     path('logout/', LogoutView.as_view(), {'next_page': '/accounts/login'}, name='logout'),
+    path('forgot-password/', views.forgot_password, name='forgot-password'),
+    path('set-password/<str:uidb64>/<str:token>/', views.set_password, name='set-password'),
 
 ]
