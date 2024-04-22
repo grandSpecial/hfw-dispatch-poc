@@ -5,4 +5,3 @@
 3. Create password reset functionality - X 
 4. Add report link to mobile screen - X
 5. Add map link to mobile screen - X
-6. Create a more instructional index page 

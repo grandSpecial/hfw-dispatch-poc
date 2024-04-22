@@ -11,18 +11,40 @@ import requests
 import os
 import json
 import re
-from datetime import timedelta  
+from datetime import timedelta
+from functools import wraps
+from django.http import HttpResponseRedirect  
 from dotenv import load_dotenv
 load_dotenv()
+import csv
+from django.contrib.auth.decorators import user_passes_test
 
 from app.models import Case, User
 from app.forms import BaseUserCreationForm, SetPasswordForm
 from app.distance import haversine
+from app.relay_points import relay_points
 
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 
+def conditional_superuser_required(view_func):
+	"""
+	Decorator to make sure the user accessing a view is a superuser if id is None.
+	If not, it redirects to a specified URL or default URL.
+	"""
+	@wraps(view_func)
+	def _wrapped_view(request, *args, **kwargs):
+		# Check if 'id' keyword argument is None
+		if kwargs.get('id') is None:
+			# Perform superuser check
+			if not (request.user.is_authenticated and request.user.is_superuser):
+				return HttpResponseRedirect('/map/')  # Redirect to login page if not superuser
+		# Proceed with the original view if id is not None or user is superuser
+		return view_func(request, *args, **kwargs)
+	
+	return _wrapped_view
+	
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # HELPER FUNCTION
@@ -48,11 +70,12 @@ def clean_number(phone_string):
 def index(request):
 	return render(request, "index.html")
 
+@conditional_superuser_required
 def report(request, id=None):
 	animal_types = ["Seabird", "Raptor", "Songbird", 
-	"Waterfowl", "Other bird", "Small Rodent", 
+	"Waterfowl", "Small Rodent", 
 	"Raccoon", "Fox", "Squirrel", "Deer", 
-	"Seal", "Other mammal", "Other"]
+	"Seal", "Crow/Raven", "Reptile", "Starling", "Pigeon"]
 	if request.method == "POST":
 		if not id:
 			c = Case(id=Case.short_uuid())
@@ -125,51 +148,65 @@ def report(request, id=None):
 
 	# if there's an ID in the url then its a relay request 
 	# get the user information and prepopulate the form
+	predefined_addresses = list(relay_points.values())
 	if id:
 		c = Case.objects.get(id=id)
 		return render(request, 'report_.html', {'case':c,
-			"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY, "animal_types":animal_types})
+			"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY, "animal_types":animal_types, 'predefined_addresses':predefined_addresses})
 
 	return render(request, 'report_.html',
-		{"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY,"animal_types":animal_types})
+		{"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY,"animal_types":animal_types, 'predefined_addresses':predefined_addresses})
 
 @login_required
 def map_view(request):
-	# filter cases by logged in user's travel_distance
-	user = request.user  
-	user_coords = user.home_coordinates.split(",")
-	user_lat, user_lon = map(float, user_coords)
-	# Only show the last 30 days of cases 
-	now = timezone.now()
-	date_30_days_ago = now - timedelta(days=30)
-	cases = Case.objects.filter(created_on__gte=date_30_days_ago).order_by("-created_on")
-	print(len(cases))
-	map_data = []
-	for case in cases:
-		print(case.log)
-		report_coords = case.log[-1]['coordinates']
-		report_lat,report_lon = map(float, report_coords)
-		distance = haversine(report_lon, report_lat, user_lon, user_lat)
-		if distance <= user.travel_distance:
-			map_data.append(
-				{"id": case.id,
-				"coordinates" : case.log[-1]['coordinates'], 
-				"status" : case.log[-1]['status'], 
-				"Animals" : case.animal,
-				}
-			)
-	# logged in, dispatch users 
-	# render all logged in users on the desktop map
-	logged_in_users = User.objects.filter(interests="Dispatch").filter(logged_in=True)
-	user_data = [
-		{"name":u.username,
-		"coordinates":[u.home_coordinates],
-		"phone":u.mobile_phone,
-		} for u in logged_in_users]
-	
-	return render(request, 'map_.html', 
-		{"cases":cases, "map_data":json.dumps(map_data),
-		"GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY, "user_data": json.dumps(user_data)})
+    user = request.user
+    user_coords = user.home_coordinates.split(",")
+    user_lat, user_lon = map(float, user_coords)
+
+    now = timezone.now()
+    date_30_days_ago = now - timedelta(days=30)
+
+    # Fetch all cases from the last 30 days initially
+    cases = Case.objects.filter(created_on__gte=date_30_days_ago).order_by("-created_on")
+    filtered_cases = []
+    map_data = []
+
+    for case in cases:
+        # Check the last log entry for its status
+        if case.log:
+            latest_log = case.log[-1]
+            status = latest_log.get('status')
+
+            # Filter out cases with statuses that should not be rendered
+            if status not in ['Delivered', 'Pick Up', 'Cancel']:
+                report_coords = latest_log.get('coordinates', [])
+                if report_coords:
+                    report_lat, report_lon = map(float, report_coords)
+                    distance = haversine(report_lon, report_lat, user_lon, user_lat)
+
+                    if distance <= user.travel_distance:
+                        map_data.append({
+                            "id": case.id,
+                            "coordinates": latest_log.get('coordinates'), 
+                            "status": latest_log.get('status'), 
+                            "Animals": case.animal,
+                        })
+                        filtered_cases.append(case)
+
+    # Fetching data for logged-in dispatch users
+    logged_in_users = User.objects.filter(interests="Dispatch", logged_in=True)
+    user_data = [{
+        "name": u.username,
+        "coordinates": [u.home_coordinates],
+        "phone": u.mobile_phone,
+    } for u in logged_in_users]
+
+    return render(request, 'map_.html', {
+        "cases": filtered_cases,  # Only pass filtered cases to the template
+        "map_data": json.dumps(map_data),
+        "GOOGLE_MAPS_API_KEY": GOOGLE_MAPS_API_KEY,
+        "user_data": json.dumps(user_data)
+    })
 
 @login_required
 def log(request):
@@ -180,24 +217,26 @@ def log(request):
 def case(request, id):
 	case = Case.objects.get(pk=id)
 	coordinates = [float(c) for c in case.log[0]['coordinates']]
+	modal_show = False 
+	last_status = request.POST.get('status', '')  # Get status from POST or default to empty string
+	user = request.user 
 	if request.method == "POST":
 		user_field = request.POST.get("name-confirm")
-		if user_field == request.user.username:
-			status = request.POST.get("status")
-			print(status)
+		if user_field == user.username:
 			# Add log entry
 			case.add_log_entry(
-				name=request.user.first_name,
+				name=user.get_full_name(),
 				contact_number=request.user.mobile_phone,  # Assuming contact number is stored in user profile
 				message=request.POST.get("note"),
 				coordinates=coordinates,  # Provide the appropriate coordinates here
-				status=status,
+				status=last_status,
 				messages_sent=1 #indicate one text was sent as 1 volunteer has accepted
 			)
-			messages.success(request, f"{status} confirmed.")
+			messages.success(request, f"{last_status} confirmed.")
 		else:
 			print(request.user.username)
 			print(user_field)
+			modal_show = True
 			messages.error(request, "Invalid username entered.")
 
 	map_data = [
@@ -209,7 +248,8 @@ def case(request, id):
 
 	return render(request, 'case_.html', 
 				  {"case": case, "map_data": map_data,
-				  "GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY})
+				  "GOOGLE_MAPS_API_KEY":GOOGLE_MAPS_API_KEY, 
+				  'modal_show':modal_show, 'last_status':last_status})
 
 def register(request,mobile_phone=None):
 	if request.method == "POST":
@@ -234,51 +274,51 @@ def register(request,mobile_phone=None):
 		'GOOGLE_MAPS_API_KEY':GOOGLE_MAPS_API_KEY})
 
 def forgot_password(request):
-    if request.method == 'POST':
-        mobile_phone = request.POST.get('mobile_phone')
-        phone_number = clean_number(str(mobile_phone))
-        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-        #lookup user with mobile number
-        user = User.objects.get(mobile_phone=mobile_phone)
-        token = default_token_generator.make_token(user)
-        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+	if request.method == 'POST':
+		mobile_phone = request.POST.get('mobile_phone')
+		phone_number = clean_number(str(mobile_phone))
+		client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+		#lookup user with mobile number
+		user = User.objects.get(mobile_phone=mobile_phone)
+		token = default_token_generator.make_token(user)
+		uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
 
-        # Generate a link to the password reset page with the token
-        password_reset_link = f'https://hfw.tbat.io/set-password/{uidb64}/{token}'
-        
-        message_body = f"Please reset the password for user {user.username} by visiting: {password_reset_link}."
-        message = client.messages.create(
-            to=phone_number,
-            from_=TWILIO_PHONE_NUMBER,
-            body=message_body
-        )
+		# Generate a link to the password reset page with the token
+		password_reset_link = f'https://hfw.tbat.io/set-password/{uidb64}/{token}'
+		
+		message_body = f"Please reset the password for user {user.username} by visiting: {password_reset_link}."
+		message = client.messages.create(
+			to=phone_number,
+			from_=TWILIO_PHONE_NUMBER,
+			body=message_body
+		)
 
-    return render(request, "forgot_password.html")
+	return render(request, "forgot_password.html")
 
 def set_password(request, uidb64, token):
-    try:
-        # Decode the user's ID from the uidb64
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = get_object_or_404(User, pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
+	try:
+		# Decode the user's ID from the uidb64
+		uid = urlsafe_base64_decode(uidb64).decode()
+		user = get_object_or_404(User, pk=uid)
+	except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+		user = None
 
-    if user is not None and default_token_generator.check_token(user, token):
-        if request.method == 'POST':
-            form = SetPasswordForm(request.POST)
-            if form.is_valid():
-                new_password = form.cleaned_data['password1']
-                user.set_password(new_password)
-                user.save()
-                print("Password has been set successfully.")
-                return redirect('login')
-            else:
-            	print("not valid")
+	if user is not None and default_token_generator.check_token(user, token):
+		if request.method == 'POST':
+			form = SetPasswordForm(request.POST)
+			if form.is_valid():
+				new_password = form.cleaned_data['password1']
+				user.set_password(new_password)
+				user.save()
+				print("Password has been set successfully.")
+				return redirect('login')
+			else:
+				print("not valid")
 
-        else:
-            form = SetPasswordForm()
-    else:
-        messages.error(request, 'The password reset link is invalid or has expired.')
-        return redirect('login')  # Or some error page
+		else:
+			form = SetPasswordForm()
+	else:
+		messages.error(request, 'The password reset link is invalid or has expired.')
+		return redirect('login')  # Or some error page
 
-    return render(request, 'set_password.html', {'form': form})
+	return render(request, 'set_password.html', {'form': form})

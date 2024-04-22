@@ -65,7 +65,7 @@
             <form method="POST" action="{% url 'c' case.id %}" class="w-100">
                 {% csrf_token %}
                 <textarea id="note" name="note" class="w-100 form-control mb-2" placeholder="Note"></textarea>
-                <input type="text" placeholder="{{ user.username }}" class="form-control mb-2" id="name-confirm" name="name-confirm">
+                <input type="text" placeholder="Email" class="form-control mb-2" id="name-confirm" name="name-confirm">
                 <div class="text-left"> <!-- Added div for left-aligning the button -->
                     <button type="submit" class="btn btn-primary">Confirm</button>
                 </div>
@@ -218,38 +218,41 @@
 
 <script>
   $(document).ready(function(){
-    $('#pickUp,#inTransit,#delivered,#calling,#cancel').click(function(){
-      var status = $(this).attr('id'); // Get the id of the clicked element
-      var statusText = "";
+    function setModalContent(statusText) {
+      $("#status").val(statusText);
+      $('#statusTitle').text(statusText + " Confirmation");
+      $('#statusMessage').text("To confirm " + statusText + ", please type your email into the field below and if necessary, add a short note.");
+    }
 
-      // Determine the text based on the clicked button
+    $('#pickUp,#inTransit,#delivered,#calling,#cancel').click(function(){
+      var status = $(this).attr('id');
+      var statusText = "";
       if (status === 'pickUp') {
         statusText = "Pick Up";
       } else if (status === 'inTransit') {
         statusText = "In Transit";
       } else if (status === 'delivered') {
         statusText = "Delivered";
-      } else if (status == 'cancel') {
-        statusText = "Cancel"
+      } else if (status === 'cancel') {
+        statusText = "Cancel";
       } else if (status === 'calling') {
-        statusText = "Calling"
-      };
-
-      $("#status").val(statusText);
-
-      // Set the values for the title and message
-      $('#statusTitle').text(statusText + " Confirmation");
-      $('#statusMessage').text("To confirm " + statusText + ", please type your username into the field below and if necessary, add a short note.");
-
-      // Show the modal
+        statusText = "Calling";
+      }
+      setModalContent(statusText);
       $('#confirmationModal').modal('show');
     });
 
-    // render page with modal open after form error
     {% if modal_show %}
+      var lastStatus = "{{ last_status }}";  // Use the variable passed from Django
+      if (lastStatus) {
+        setModalContent(lastStatus);
+      }
       $('#confirmationModal').modal('show');
     {% endif %}
   });
 </script>
+
+
+
 
 {% endblock %}
