@@ -221,23 +221,23 @@ def case(request, id):
 	last_status = request.POST.get('status', '')  # Get status from POST or default to empty string
 	user = request.user 
 	if request.method == "POST":
-		user_field = request.POST.get("name-confirm")
-		if user_field == user.username:
+		# user_field = request.POST.get("name-confirm")
+		# if user_field == user.username:
 			# Add log entry
-			case.add_log_entry(
-				name=user.get_full_name(),
-				contact_number=request.user.mobile_phone,  # Assuming contact number is stored in user profile
-				message=request.POST.get("note"),
-				coordinates=coordinates,  # Provide the appropriate coordinates here
-				status=last_status,
-				messages_sent=1 #indicate one text was sent as 1 volunteer has accepted
-			)
-			messages.success(request, f"{last_status} confirmed.")
-		else:
-			print(request.user.username)
-			print(user_field)
-			modal_show = True
-			messages.error(request, "Invalid username entered.")
+		case.add_log_entry(
+			name=user.get_full_name(),
+			contact_number=request.user.mobile_phone,  # Assuming contact number is stored in user profile
+			message=request.POST.get("note"),
+			coordinates=coordinates,  # Provide the appropriate coordinates here
+			status=last_status,
+			messages_sent=1 #indicate one text was sent as 1 volunteer has accepted
+		)
+		messages.success(request, f"{last_status} confirmed.")
+		# else:
+		# 	print(request.user.username)
+		# 	print(user_field)
+		# 	modal_show = True
+		# 	messages.error(request, "Invalid username entered.")
 
 	map_data = [
 		{"Coordinates": coordinates,
