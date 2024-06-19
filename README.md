@@ -50,6 +50,7 @@ Ensure you have the following installed:
     TWILIO_AUTH_TOKEN=your_twilio_auth_token
     TWILIO_PHONE_NUMBER=your_twilio_phone_number
     GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+    SECRET_KEY=xxx
     ```
 
 5. **Run database migrations:**
