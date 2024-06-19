@@ -137,54 +137,8 @@ This template is used for displaying the map with cases and user data.
 - **`user_data`**:
   - JSON encoded data containing logged-in dispatch users and their coordinates.
 
-#### Example Usage
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Map View</title>
-  <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap" async defer></script>
-  <script>
-    function initMap() {
-      const map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 10,
-        center: {lat: 44.6488, lng: -63.5752}  // Default to Halifax, NS
-      });
-
-      const cases = JSON.parse('{{ map_data|escapejs }}');
-      cases.forEach(c => {
-        const marker = new google.maps.Marker({
-          position: {lat: parseFloat(c.coordinates[0]), lng: parseFloat(c.coordinates[1])},
-          map: map,
-          title: c.Animals,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: getStatusColor(c.status),
-            fillOpacity: 1,
-            strokeWeight: 1
-          }
-        });
-      });
-
-      function getStatusColor(status) {
-        switch(status) {
-          case 'Reported': return 'red';
-          case 'In Transit': return 'blue';
-          default: return 'green';
-        }
-      }
-    }
-  </script>
-</head>
-<body>
-  <div id="map" style="height: 500px; width: 100%;"></div>
-</body>
-</html>
-
-
-# Hope for Wildlife Dispatch Service Documentation for Volunteers
+# Hope for Wildlife Dispatch Service Volunteer Documentation
 
 ## 1. Register
 
